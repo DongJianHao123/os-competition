@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(cd:*)",
+      "Bash(pnpm --version)",
+      "Bash(pnpm add:*)",
+      "Bash(nest new:*)",
+      "Bash(pnpm create:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm approve-builds:*)",
+      "Bash(npx prisma:*)",
+      "WebSearch",
+      "Bash(npx tsx:*)",
+      "Bash(npx nest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite:*)",
+      "Bash(curl:*)",
+      "Bash(pkill -f \"nest start\")",
+      "Bash(node -e \":*)",
+      "Bash(npx xlsx-cli:*)",
+      "Bash(node import-reviews.mjs)",
+      "Bash(python:*)",
+      "Bash(\"E:\\\\Project\\\\工作空间\\\\OS大赛\\\\os-competition\\\\output.txt\")",
+      "Bash(pip install:*)",
+      "Bash(ls:*)",
+      "Bash(node import-files.mjs)",
+      "Bash(pnpm dev:*)"
+    ]
+  }
+}

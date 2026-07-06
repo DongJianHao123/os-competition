@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String
+  phone        String    @unique
+  passwordHash String    @map("password_hash")
+  role         String    @default("judge")
+  isActive     Boolean   @default(true) @map("is_active")
+  judgeType    String?   @map("judge_type")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  reviews      Review[]
+  reviewHistory ReviewHistory[]
+  importLogs   ImportLog[]
+  groupJudges  GroupJudge[]
+
+  @@map("users")
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  projectCode String   @unique @map("project_code")
+  teamName    String   @map("team_name")
+  leaderName  String   @map("leader_name")
+  school      String
+  repoUrl     String   @map("repo_url")
+  round       String
+  type        String   @default("功能赛")
+  status      String   @default("待评审")
+  remark      String?
+  groupId     Int?     @map("group_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  group       ReviewGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  reviews           Review[]
+  plagiarismFiles   PlagiarismFile[]
+  commitAnalysis    CommitAnalysis?
+
+  @@map("projects")
+}
+
+model Review {
+  id            Int       @id @default(autoincrement())
+  judgeId       Int       @map("judge_id")
+  projectId     Int       @map("project_id")
+  docScore      String?   @map("doc_score")
+  codeScore     String?   @map("code_score")
+  finalDecision String?   @map("final_decision")
+  comment       String?   @default("")
+  reviewedAt    DateTime? @map("reviewed_at")
+  judge         User      @relation(fields: [judgeId], references: [id])
+  project       Project   @relation(fields: [projectId], references: [id])
+  history       ReviewHistory[]
+
+  @@unique([judgeId, projectId])
+  @@map("reviews")
+}
+
+model ReviewHistory {
+  id         Int      @id @default(autoincrement())
+  reviewId   Int      @map("review_id")
+  changes    Json
+  operatorId Int      @map("operator_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  review     Review   @relation(fields: [reviewId], references: [id])
+  operator   User     @relation(fields: [operatorId], references: [id])
+
+  @@map("review_history")
+}
+
+model ImportLog {
+  id         Int      @id @default(autoincrement())
+  operatorId Int      @map("operator_id")
+  count      Int
+  filename   String
+  createdAt  DateTime @default(now()) @map("created_at")
+  operator   User     @relation(fields: [operatorId], references: [id])
+
+  @@map("import_logs")
+}
+
+model PlagiarismFile {
+  id        Int      @id @default(autoincrement())
+  projectId Int      @map("project_id")
+  filename  String
+  url       String   @db.VarChar(1024)
+  createdAt DateTime @default(now()) @map("created_at")
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("plagiarism_files")
+}
+
+model CommitAnalysis {
+  id        Int      @id @default(autoincrement())
+  projectId Int      @unique @map("project_id")
+  filename  String
+  url       String   @db.VarChar(1024)
+  createdAt DateTime @default(now()) @map("created_at")
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("commit_analysis")
+}
+
+model ReviewGroup {
+  id             Int          @id @default(autoincrement())
+  name           String
+  type           String       // 内核赛 / 功能赛
+  projectNumber  String?      @map("project_number")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  judges         GroupJudge[]
+  projects       Project[]
+
+  @@map("review_groups")
+}
+
+model GroupJudge {
+  id      Int         @id @default(autoincrement())
+  groupId Int         @map("group_id")
+  judgeId Int         @map("judge_id")
+  group   ReviewGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  judge   User        @relation(fields: [judgeId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, judgeId])
+  @@map("group_judges")
+}
