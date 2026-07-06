@@ -16,8 +16,8 @@ export class AdminController {
   constructor(private adminService: AdminService) {}
 
   @Get('judges')
-  listJudges(@Query('page') page = 1, @Query('pageSize') pageSize = 10) {
-    return this.adminService.listJudges(+page, +pageSize);
+  listJudges(@Query('page') page = 1, @Query('pageSize') pageSize = 10, @Query('search') search?: string, @Query('judgeType') judgeType?: string) {
+    return this.adminService.listJudges(+page, +pageSize, search, judgeType);
   }
 
   @Post('judges')
@@ -36,8 +36,8 @@ export class AdminController {
   }
 
   @Get('projects')
-  listProjects(@Query('page') page = 1, @Query('pageSize') pageSize = 10, @Query('search') search?: string) {
-    return this.adminService.listProjects(+page, +pageSize, search);
+  listProjects(@Query('page') page = 1, @Query('pageSize') pageSize = 10, @Query('search') search?: string, @Query('type') type?: string, @Query('status') status?: string) {
+    return this.adminService.listProjects(+page, +pageSize, search, type, status);
   }
 
   @Get('projects/:id')
@@ -62,13 +62,13 @@ export class AdminController {
   }
 
   @Get('import-logs')
-  getImportLogs(@Query('page') page = 1, @Query('pageSize') pageSize = 10) {
-    return this.adminService.getImportLogs(+page, +pageSize);
+  getImportLogs(@Query('page') page = 1, @Query('pageSize') pageSize = 10, @Query('search') search?: string) {
+    return this.adminService.getImportLogs(+page, +pageSize, search);
   }
 
   @Get('reviews/summary')
-  getReviewSummary() {
-    return this.adminService.getReviewSummary();
+  getReviewSummary(@Query('type') type?: string) {
+    return this.adminService.getReviewSummary(type);
   }
 
   @Post('projects/:id/plagiarism')
@@ -103,8 +103,8 @@ export class AdminController {
 
   // --- 分组管理 ---
   @Get('groups')
-  listGroups() {
-    return this.adminService.listGroups();
+  listGroups(@Query('type') type?: string) {
+    return this.adminService.listGroups(type);
   }
 
   @Post('groups')

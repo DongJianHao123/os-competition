@@ -1,10 +1,18 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Table, Input, Tag, Button, Modal, Typography } from 'antd';
-import { SearchOutlined, FileSearchOutlined, HistoryOutlined, FullscreenOutlined, FullscreenExitOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { Table, Input, Tag, Button, Typography, Card, Space, Progress } from 'antd';
+import {
+  ArrowLeftOutlined, SearchOutlined, TrophyOutlined, ClockCircleOutlined,
+} from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { judgeApi } from '../../api/judge';
-import MarkdownViewer from '../../components/MarkdownViewer';
+
+const { Title, Text } = Typography;
+
+const typeGradient: Record<string, string> = {
+  '内核赛': 'linear-gradient(135deg, #f9f0ff 0%, #efdbff 100%)',
+  '功能赛': 'linear-gradient(135deg, #e6fffb 0%, #b5f5ec 100%)',
+};
 
 export default function GroupDetail() {
   const { id } = useParams<{ id: string }>();
@@ -13,21 +21,9 @@ export default function GroupDetail() {
   const [search, setSearch] = useState('');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['judge-group-projects', id, page],
-    queryFn: () => judgeApi.getGroupProjects(Number(id), page, 10).then((r) => r.data),
+    queryKey: ['judge-group-projects', id, page, search],
+    queryFn: () => judgeApi.getGroupProjects(Number(id), page, 10, search || undefined).then((r) => r.data),
   });
-
-  // 查重弹窗
-  const [plagProject, setPlagProject] = useState<any>(null);
-  const [plagModalOpen, setPlagModalOpen] = useState(false);
-  const [plagFullscreen, setPlagFullscreen] = useState(false);
-  const [plagKey, setPlagKey] = useState(0);
-
-  // 提交记录弹窗
-  const [commitProject, setCommitProject] = useState<any>(null);
-  const [commitModalOpen, setCommitModalOpen] = useState(false);
-  const [commitFullscreen, setCommitFullscreen] = useState(false);
-  const [commitKey, setCommitKey] = useState(0);
 
   const { data: myReviews } = useQuery({
     queryKey: ['my-reviews-list'],
@@ -39,143 +35,152 @@ export default function GroupDetail() {
   );
 
   const group = data?.group;
+  const totalProjects = data?.total || 0;
+  const reviewedCount = (data?.data || []).filter((p: any) => reviewedIds.has(p.id)).length;
+  const reviewProgress = totalProjects > 0 ? Math.round((reviewedCount / totalProjects) * 100) : 0;
 
   const columns = [
-    { title: '作品编号', dataIndex: 'projectCode', key: 'projectCode', width: 170 },
-    { title: '团队名称', dataIndex: 'teamName', key: 'teamName' },
-    { title: '队长', dataIndex: 'leaderName', key: 'leaderName' },
-    { title: '学校', dataIndex: 'school', key: 'school' },
+    {
+      title: '作品编号', dataIndex: 'projectCode', key: 'projectCode', width: 170,
+      render: (v: string) => <Text code style={{ fontSize: 12 }}>{v}</Text>,
+    },
+    { title: '团队名称', dataIndex: 'teamName', key: 'teamName', width: 180 },
+    { title: '队长', dataIndex: 'leaderName', key: 'leaderName', width: 100 },
+    { title: '学校', dataIndex: 'school', key: 'school', ellipsis: true },
     {
       title: '类型', dataIndex: 'type', key: 'type', width: 90,
       render: (v: string) => (
-        <Tag color={v === '内核赛' ? 'purple' : 'cyan'}>{v || '功能赛'}</Tag>
+        <Tag color={v === '内核赛' ? 'purple' : 'cyan'} style={{ borderRadius: 6 }}>{v || '功能赛'}</Tag>
       ),
     },
     {
-      title: '评审状态', key: 'reviewStatus',
+      title: '评审状态', key: 'reviewStatus', width: 100,
       render: (_: any, record: any) =>
-        reviewedIds.has(record.id) ? <Tag color="green">已评审</Tag> : <Tag>待评审</Tag>,
-    },
-    {
-      title: '操作', key: 'actions',
-      render: (_: any, record: any) => (
-        <>
-          <Button
-            type="link"
-            icon={<FileSearchOutlined />}
-            onClick={() => {
-              setPlagProject(record);
-              setPlagModalOpen(true);
-              setPlagKey(k => k + 1);
-            }}
-          >
-            查重
-          </Button>
-          <Button
-            type="link"
-            icon={<HistoryOutlined />}
-            onClick={() => {
-              setCommitProject(record);
-              setCommitModalOpen(true);
-              setCommitKey(k => k + 1);
-            }}
-          >
-            提交记录
-          </Button>
-        </>
-      ),
+        reviewedIds.has(record.id)
+          ? <Tag color="success" style={{ borderRadius: 6 }}>已评审</Tag>
+          : <Tag style={{ borderRadius: 6 }}>待评审</Tag>,
     },
   ];
 
   return (
     <div>
-      <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/judge/groups')}>
-          返回分组
-        </Button>
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          {group?.name || '分组详情'}
-        </Typography.Title>
-        {group && (
-          <Tag color={group.type === '内核赛' ? 'purple' : 'cyan'}>{group.type}</Tag>
-        )}
-      </div>
-      <Input.Search
-        placeholder="搜索团队、队长、学校、编号"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        onSearch={() => setPage(1)}
-        style={{ width: 300, marginBottom: 16 }}
-        enterButton={<SearchOutlined />}
-      />
-      <Table
-        columns={columns} dataSource={data?.data || []} rowKey="id" loading={isLoading}
-        pagination={{ current: page, total: data?.total || 0, onChange: setPage }}
-        onRow={(record) => ({
-          onClick: () => navigate(`/judge/projects/${record.id}`),
-          style: { cursor: 'pointer' },
-        })}
-      />
-
-      {/* 查重弹窗（只读） */}
-      <Modal
-        title={plagProject ? `查重结果 — ${plagProject.teamName}` : '查重结果'}
-        open={plagModalOpen}
-        onCancel={() => { setPlagModalOpen(false); setPlagFullscreen(false); }}
-        width={plagFullscreen ? '100%' : 1000}
-        footer={null}
-        destroyOnClose
-        style={plagFullscreen ? { maxWidth: '100vw', top: 0, paddingBottom: 0 } : { top: 30 }}
-        styles={{ body: plagFullscreen ? { height: 'calc(100vh - 55px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' } : {} }}
+      {/* Back button + Header */}
+      <Button
+        type="text"
+        icon={<ArrowLeftOutlined />}
+        onClick={() => navigate('/judge/groups')}
+        style={{ marginBottom: 20, padding: '4px 8px', fontSize: 14, color: '#666' }}
       >
-        {plagProject && (
-          <div style={{ marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            <Button
-              type="text"
-              icon={plagFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
-              onClick={() => setPlagFullscreen(!plagFullscreen)}
-              style={{ marginLeft: 'auto' }}
-            />
-          </div>
-        )}
-        {plagProject && (
-          <MarkdownViewer
-            key={plagKey}
-            projectId={plagProject.id}
-            getFiles={judgeApi.getPlagiarismFiles}
-          />
-        )}
-      </Modal>
+        返回分组列表
+      </Button>
 
-      {/* 提交记录弹窗（只读） */}
-      <Modal
-        title={commitProject ? `提交记录分析 — ${commitProject.teamName}` : '提交记录分析'}
-        open={commitModalOpen}
-        onCancel={() => { setCommitModalOpen(false); setCommitFullscreen(false); }}
-        width={commitFullscreen ? '100%' : 1000}
-        footer={null}
-        destroyOnClose
-        style={commitFullscreen ? { maxWidth: '100vw', top: 0, paddingBottom: 0 } : { top: 30 }}
-        styles={{ body: commitFullscreen ? { height: 'calc(100vh - 55px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' } : {} }}
-      >
-        {commitProject && (
-          <div style={{ marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            <Button
-              type="text"
-              icon={commitFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
-              onClick={() => setCommitFullscreen(!commitFullscreen)}
-              style={{ marginLeft: 'auto' }}
-            />
+      {/* Group Header Banner */}
+      {group && (
+        <Card
+          style={{
+            marginBottom: 24,
+            borderRadius: 12,
+            background: typeGradient[group.type] || typeGradient['功能赛'],
+            border: 'none',
+          }}
+          styles={{ body: { padding: '24px 28px' } }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+            <div>
+              <Title level={3} style={{ margin: 0, fontWeight: 700 }}>
+                <TrophyOutlined style={{ marginRight: 10, color: group.type === '内核赛' ? '#722ed1' : '#13c2c2' }} />
+                {group.name}
+              </Title>
+              <Space style={{ marginTop: 8 }}>
+                <Tag
+                  color={group.type === '内核赛' ? 'purple' : 'cyan'}
+                  style={{ borderRadius: 6, fontSize: 13, padding: '2px 12px' }}
+                >
+                  {group.type}
+                </Tag>
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                  <ClockCircleOutlined style={{ marginRight: 4 }} />
+                  {new Date(group.createdAt).toLocaleDateString()}
+                </Text>
+              </Space>
+            </div>
+            {/* Review Progress */}
+            <div style={{ textAlign: 'center', minWidth: 160 }}>
+              <Progress
+                type="circle"
+                percent={reviewProgress}
+                size={72}
+                strokeColor={reviewProgress === 100 ? '#52c41a' : '#1677ff'}
+                format={(pct) => (
+                  <span style={{ fontSize: 18, fontWeight: 700 }}>
+                    {pct}%
+                  </span>
+                )}
+              />
+              <div style={{ marginTop: 4 }}>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  已完成 {reviewedCount}/{totalProjects}
+                </Text>
+              </div>
+            </div>
           </div>
-        )}
-        {commitProject && (
-          <MarkdownViewer
-            key={commitKey}
-            projectId={commitProject.id}
-            getFiles={judgeApi.getCommitAnalysis}
-          />
-        )}
-      </Modal>
+        </Card>
+      )}
+
+      {/* Projects List */}
+      <Card
+        title={
+          <span style={{ fontSize: 16, fontWeight: 600 }}>
+            <TrophyOutlined style={{ marginRight: 8, color: '#fa8c16' }} />
+            作品列表
+          </span>
+        }
+        extra={
+          <Text type="secondary">
+            共 {totalProjects} 个作品
+          </Text>
+        }
+        style={{ borderRadius: 12 }}
+        styles={{ body: { padding: '16px 24px' } }}
+      >
+        <Input.Search
+          placeholder="搜索团队、队长、学校、编号"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onSearch={() => setPage(1)}
+          style={{ width: 340, marginBottom: 16 }}
+          enterButton={<><SearchOutlined /> 搜索</>}
+          size="middle"
+        />
+        <Table
+          columns={columns}
+          dataSource={data?.data || []}
+          rowKey="id"
+          loading={isLoading}
+          pagination={{
+            current: page,
+            total: totalProjects,
+            onChange: setPage,
+            showTotal: (t) => `共 ${t} 条`,
+          }}
+          onRow={(record) => ({
+            onClick: () => navigate(`/judge/projects/${record.id}`),
+            style: { cursor: 'pointer' },
+          })}
+          rowClassName={(record) =>
+            reviewedIds.has(record.id) ? 'reviewed-row' : ''
+          }
+        />
+      </Card>
+
+      <style>{`
+        .reviewed-row {
+          background: #f6ffed;
+        }
+        .reviewed-row:hover > td {
+          background: #eaffd8 !important;
+        }
+      `}</style>
     </div>
   );
 }

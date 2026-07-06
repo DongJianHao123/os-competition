@@ -56,7 +56,7 @@ export class JudgeController {
   }
 
   @Get('groups/:id/projects')
-  getGroupProjects(@Param('id') id: string, @Query('page') page = 1, @Query('pageSize') pageSize = 10, @Request() req) {
-    return this.judgeService.getGroupProjects(+id, req.user.id, +page, +pageSize);
+  getGroupProjects(@Param('id') id: string, @Query('page') page = 1, @Query('pageSize') pageSize = 10, @Request() req, @Query('search') search?: string) {
+    return this.judgeService.getGroupProjects(+id, req.user.id, +page, +pageSize, search);
   }
 }

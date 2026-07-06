@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import AppLayout from './components/AppLayout';
+import JudgeLayout from './components/JudgeLayout';
 import AdminJudges from './pages/admin/Judges';
 import AdminProjectsManage from './pages/admin/ProjectsManage';
 import AdminGroupManage from './pages/admin/GroupManage';
@@ -22,7 +23,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/judge',
-    element: <AppLayout role="judge" />,
+    element: <JudgeLayout />,
     children: [
       { index: true, element: <Navigate to="groups" replace /> },
       { path: 'groups', element: <JudgeGroups /> },

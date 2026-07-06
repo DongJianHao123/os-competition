@@ -16,6 +16,8 @@ import { fileUpload } from '../../utils/oss';
 export default function ProjectsManage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [type, setType] = useState<string | undefined>(undefined);
+  const [status, setStatus] = useState<string | undefined>(undefined);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
   const [form] = Form.useForm();
@@ -39,8 +41,8 @@ export default function ProjectsManage() {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-projects', page, search],
-    queryFn: () => adminApi.listProjects(page, 10, search).then((r) => r.data),
+    queryKey: ['admin-projects', page, search, type, status],
+    queryFn: () => adminApi.listProjects(page, 10, search || undefined, type, status).then((r) => r.data),
   });
 
   const updateMut = useMutation({
@@ -206,7 +208,7 @@ export default function ProjectsManage() {
   return (
     <div>
       <h2>作品管理</h2>
-      <div style={{ marginBottom: 16, display: 'flex', gap: 16 }}>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
         <Input.Search
           placeholder="搜索编号、团队、队长、学校"
           value={search}
@@ -215,6 +217,26 @@ export default function ProjectsManage() {
           style={{ width: 320 }}
           allowClear
         />
+        <Select
+          placeholder="作品类型"
+          value={type}
+          onChange={(v) => { setType(v); setPage(1); }}
+          allowClear
+          style={{ width: 130 }}
+        >
+          <Select.Option value="内核赛">内核赛</Select.Option>
+          <Select.Option value="功能赛">功能赛</Select.Option>
+        </Select>
+        <Select
+          placeholder="作品状态"
+          value={status}
+          onChange={(v) => { setStatus(v); setPage(1); }}
+          allowClear
+          style={{ width: 130 }}
+        >
+          <Select.Option value="待评审">待评审</Select.Option>
+          <Select.Option value="已评审">已评审</Select.Option>
+        </Select>
         <span style={{ lineHeight: '32px', color: '#999' }}>
           共 {data?.total || 0} 条记录
         </span>

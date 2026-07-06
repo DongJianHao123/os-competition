@@ -1,109 +1,170 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Descriptions, Card, Form, Radio, Input, Button, message, Spin, Row, Col } from 'antd';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Descriptions, Card, Spin, Tabs, Tag, Button, Typography } from 'antd';
+import {
+  ArrowLeftOutlined, FileSearchOutlined,
+  HistoryOutlined, InfoCircleOutlined,
+  LinkOutlined, TeamOutlined, HomeOutlined, TrophyOutlined,
+  OrderedListOutlined,
+} from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import { judgeApi } from '../../api/judge';
+import MarkdownViewer from '../../components/MarkdownViewer';
+
+const { Title, Text } = Typography;
 
 export default function Review() {
   const { id } = useParams<{ id: string }>();
-  const [form] = Form.useForm();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('plagiarism');
 
   const { data, isLoading } = useQuery({
     queryKey: ['project-detail', id],
     queryFn: () => judgeApi.getProject(Number(id)).then((r) => r.data),
   });
 
-  const { data: readmeData } = useQuery({
-    queryKey: ['project-readme', id],
-    queryFn: () =>
-      judgeApi
-        .getReadme(Number(id))
-        .then((r) => r.data)
-        .catch(() => null),
-  });
-
-  const submitMut = useMutation({
-    mutationFn: (values: any) => judgeApi.submitReview(Number(id), values),
-    onSuccess: () => message.success('评审提交成功'),
-    onError: () => message.error('提交失败'),
-  });
-
-  useEffect(() => {
-    if (data?.review) {
-      form.setFieldsValue(data.review);
-    }
-  }, [data, form]);
-
-  if (isLoading) return <Spin style={{ display: 'block', margin: '100px auto' }} />;
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: 120 }}>
+        <Spin size="large" tip="加载中..." />
+      </div>
+    );
+  }
 
   const project = data?.project;
   if (!project) return <div>作品不存在</div>;
 
+  const rankUrl = 'https://course.educg.net/pages/contest/contest_rank.jsp?contestID=Z7zWWwTfti0&my=false&contestCID=0#contestSubAn';
+
+  const tabItems = [
+    {
+      key: 'plagiarism',
+      label: <span><FileSearchOutlined /> 查重结果</span>,
+      children: (
+        <MarkdownViewer
+          projectId={project.id}
+          getFiles={judgeApi.getPlagiarismFiles}
+        />
+      ),
+    },
+    {
+      key: 'commit',
+      label: <span><HistoryOutlined /> 提交记录</span>,
+      children: (
+        <MarkdownViewer
+          projectId={project.id}
+          getFiles={judgeApi.getCommitAnalysis}
+        />
+      ),
+    },
+    {
+      key: 'rank',
+      label: <span><OrderedListOutlined /> 排行榜</span>,
+      children: null,
+    },
+  ];
+
   return (
-    <Row gutter={24}>
-      <Col span={14}>
-        <Card title="作品信息">
-          <Descriptions column={1}>
-            <Descriptions.Item label="作品编号">{project.projectCode}</Descriptions.Item>
-            <Descriptions.Item label="团队名称">{project.teamName}</Descriptions.Item>
-            <Descriptions.Item label="队长">{project.leaderName}</Descriptions.Item>
-            <Descriptions.Item label="学校">{project.school}</Descriptions.Item>
-            <Descriptions.Item label="仓库地址">
-              <a href={project.repoUrl} target="_blank" rel="noopener noreferrer">
-                {project.repoUrl}
+    <div>
+      {/* Back Navigation */}
+      <Button
+        type="text"
+        icon={<ArrowLeftOutlined />}
+        onClick={() => navigate(-1)}
+        style={{ marginBottom: 20, padding: '4px 8px', fontSize: 14, color: '#666' }}
+      >
+        返回
+      </Button>
+
+      {/* Project Info Card */}
+      <Card
+        title={
+          <span style={{ fontSize: 16, fontWeight: 600 }}>
+            <InfoCircleOutlined style={{ marginRight: 8, color: '#1677ff' }} />
+            作品信息
+          </span>
+        }
+        style={{ borderRadius: 12, marginBottom: 24 }}
+        styles={{ body: { padding: '20px 24px' } }}
+      >
+        {/* Project Title Area */}
+        <div style={{
+          marginBottom: 20,
+          padding: '16px 20px',
+          background: 'linear-gradient(135deg, #f6f8fc 0%, #eef1f7 100%)',
+          borderRadius: 10,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
+              <TrophyOutlined style={{ marginRight: 8, color: '#fa8c16' }} />
+              {project.teamName}
+            </Title>
+            <Tag
+              color={project.type === '内核赛' ? 'purple' : 'cyan'}
+              style={{ borderRadius: 6, fontSize: 13, padding: '2px 12px' }}
+            >
+              {project.type || '功能赛'}
+            </Tag>
+            <Tag color="blue" style={{ borderRadius: 6 }}>{project.round}</Tag>
+          </div>
+          <div style={{ marginTop: 8, display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+            <Text type="secondary">
+              <HomeOutlined style={{ marginRight: 4 }} />
+              {project.school}
+            </Text>
+            <Text type="secondary">
+              <TeamOutlined style={{ marginRight: 4 }} />
+              队长: {project.leaderName}
+            </Text>
+          </div>
+        </div>
+
+        <Descriptions column={2} size="middle" labelStyle={{ color: '#666' }}>
+          <Descriptions.Item label="作品编号">
+            <Text code style={{ fontSize: 13 }}>{project.projectCode}</Text>
+          </Descriptions.Item>
+          <Descriptions.Item label="赛段">{project.round}</Descriptions.Item>
+          <Descriptions.Item label="仓库地址">
+            {project.repoUrl ? (
+              <a
+                href={project.repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: 13 }}
+              >
+                <LinkOutlined /> 查看仓库
               </a>
-            </Descriptions.Item>
-            <Descriptions.Item label="赛段">{project.round}</Descriptions.Item>
-            <Descriptions.Item label="备注">{project.remark || '无'}</Descriptions.Item>
-          </Descriptions>
-        </Card>
-        {readmeData && (
-          <Card title="README 预览" style={{ marginTop: 16 }}>
-            <pre style={{
-              whiteSpace: 'pre-wrap', maxHeight: 400, overflow: 'auto',
-              background: '#f6f8fa', padding: 16, borderRadius: 4,
-            }}>
-              {readmeData.content}
-            </pre>
-          </Card>
-        )}
-      </Col>
-      <Col span={10}>
-        <Card title="评审打分">
-          <Form form={form} layout="vertical" onFinish={(values) => submitMut.mutate(values)}>
-            <Form.Item name="docScore" label="文档评审" rules={[{ required: true, message: '请选择' }]}>
-              <Radio.Group>
-                <Radio.Button value="优">优</Radio.Button>
-                <Radio.Button value="良">良</Radio.Button>
-                <Radio.Button value="中">中</Radio.Button>
-                <Radio.Button value="差">差</Radio.Button>
-              </Radio.Group>
-            </Form.Item>
-            <Form.Item name="codeScore" label="代码评审" rules={[{ required: true, message: '请选择' }]}>
-              <Radio.Group>
-                <Radio.Button value="优">优</Radio.Button>
-                <Radio.Button value="良">良</Radio.Button>
-                <Radio.Button value="中">中</Radio.Button>
-                <Radio.Button value="差">差</Radio.Button>
-              </Radio.Group>
-            </Form.Item>
-            <Form.Item name="finalDecision" label="是否进入决赛" rules={[{ required: true, message: '请选择' }]}>
-              <Radio.Group>
-                <Radio.Button value="是">是</Radio.Button>
-                <Radio.Button value="否">否</Radio.Button>
-              </Radio.Group>
-            </Form.Item>
-            <Form.Item name="comment" label="评语">
-              <Input.TextArea rows={4} placeholder="可填写补充评语..." />
-            </Form.Item>
-            <Form.Item>
-              <Button type="primary" htmlType="submit" loading={submitMut.isPending} block>
-                提交评审
-              </Button>
-            </Form.Item>
-          </Form>
-        </Card>
-      </Col>
-    </Row>
+            ) : '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="备注">{project.remark || '无'}</Descriptions.Item>
+        </Descriptions>
+      </Card>
+
+      {/* Review Materials */}
+      <Card
+        title={
+          <span style={{ fontSize: 16, fontWeight: 600 }}>
+            <FileSearchOutlined style={{ marginRight: 8, color: '#722ed1' }} />
+            评审材料
+          </span>
+        }
+        style={{ borderRadius: 12 }}
+        styles={{ body: { padding: '12px 24px' } }}
+      >
+        <Tabs
+          activeKey={activeTab}
+          items={tabItems}
+          size="large"
+          tabBarStyle={{ marginBottom: 8 }}
+          onChange={(key) => {
+            if (key === 'rank') {
+              window.open(rankUrl, '_blank', 'noopener,noreferrer');
+              return;
+            }
+            setActiveTab(key);
+          }}
+        />
+      </Card>
+    </div>
   );
 }

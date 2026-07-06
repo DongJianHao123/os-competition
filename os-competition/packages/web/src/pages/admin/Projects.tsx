@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { Upload, Button, Table, message } from 'antd';
+import { Upload, Button, Table, Input, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '../../api/admin';
 
 export default function Projects() {
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
 
   const { data: logs, isLoading } = useQuery({
-    queryKey: ['import-logs', page],
-    queryFn: () => adminApi.getImportLogs(page, 10).then((r) => r.data),
+    queryKey: ['import-logs', page, search],
+    queryFn: () => adminApi.getImportLogs(page, 10, search || undefined).then((r) => r.data),
   });
 
   const handleUpload = async (file: File) => {
@@ -45,6 +46,16 @@ export default function Projects() {
         </Upload>
       </div>
       <h3>导入历史</h3>
+      <div style={{ marginBottom: 16 }}>
+        <Input.Search
+          placeholder="搜索文件名"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onSearch={() => setPage(1)}
+          style={{ width: 320 }}
+          allowClear
+        />
+      </div>
       <Table
         columns={columns} dataSource={logs?.data || []} rowKey="id" loading={isLoading}
         pagination={{ current: page, total: logs?.total || 0, onChange: setPage }}

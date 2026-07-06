@@ -150,7 +150,7 @@ export class JudgeService {
     return groupJudges.map(gj => gj.group);
   }
 
-  async getGroupProjects(groupId: number, judgeId: number, page: number, pageSize: number) {
+  async getGroupProjects(groupId: number, judgeId: number, page: number, pageSize: number, search?: string) {
     const group = await this.prisma.reviewGroup.findUnique({ where: { id: groupId } });
     if (!group) throw new NotFoundException('分组不存在');
     const member = await this.prisma.groupJudge.findUnique({
@@ -158,6 +158,14 @@ export class JudgeService {
     });
     if (!member) throw new NotFoundException('您不属于该分组');
     const where: any = { groupId };
+    if (search) {
+      where.OR = [
+        { teamName: { contains: search } },
+        { leaderName: { contains: search } },
+        { school: { contains: search } },
+        { projectCode: { contains: search } },
+      ];
+    }
     const [data, total] = await Promise.all([
       this.prisma.project.findMany({
         where,

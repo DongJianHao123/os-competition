@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '../../api/admin';
 
 export default function GroupManage() {
+  const [type, setType] = useState<string | undefined>(undefined);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<any>(null);
   const [form] = Form.useForm();
@@ -15,8 +16,8 @@ export default function GroupManage() {
   const [memberGroupId, setMemberGroupId] = useState<number | null>(null);
 
   const { data: groups, isLoading } = useQuery({
-    queryKey: ['admin-groups'],
-    queryFn: () => adminApi.listGroups().then((r) => r.data),
+    queryKey: ['admin-groups', type],
+    queryFn: () => adminApi.listGroups(type).then((r) => r.data),
   });
 
   const { data: judges } = useQuery({
@@ -169,7 +170,7 @@ export default function GroupManage() {
 
   const judgeTransferData = (judges?.data || []).map((j: any) => ({
     key: j.id,
-    title: `${j.name} (${j.judgeType || '-'})`,
+    title: `${j.name} - ${j.school || ''} (${j.judgeType || '-'})`,
   }));
 
   const projectTransferData = (projects?.data || [])
@@ -188,6 +189,16 @@ export default function GroupManage() {
       >
         新增分组
       </Button>
+      <Select
+        placeholder="分组类型"
+        value={type}
+        onChange={setType}
+        allowClear
+        style={{ width: 140, marginBottom: 16, marginLeft: 16 }}
+      >
+        <Select.Option value="内核赛">内核赛</Select.Option>
+        <Select.Option value="功能赛">功能赛</Select.Option>
+      </Select>
       <Table
         columns={columns} dataSource={groups || []} rowKey="id" loading={isLoading}
         pagination={false}

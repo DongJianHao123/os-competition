@@ -15,6 +15,6 @@ export const judgeApi = {
   getCommitAnalysis: (projectId: number) =>
     client.get(`/judge/projects/${projectId}/commit-analysis`),
   getMyGroups: () => client.get('/judge/groups'),
-  getGroupProjects: (groupId: number, page: number, pageSize: number) =>
-    client.get(`/judge/groups/${groupId}/projects`, { params: { page, pageSize } }),
+  getGroupProjects: (groupId: number, page: number, pageSize: number, search?: string) =>
+    client.get(`/judge/groups/${groupId}/projects`, { params: { page, pageSize, search } }),
 };

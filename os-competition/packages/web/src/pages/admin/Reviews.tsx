@@ -1,4 +1,5 @@
-import { Table, Tag, Button, message } from 'antd';
+import { useState } from 'react';
+import { Table, Tag, Button, message, Select } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '../../api/admin';
@@ -7,9 +8,11 @@ const scoreColorMap: Record<string, string> = { '优': 'green', '良': 'blue', '
 const decisionColorMap: Record<string, string> = { '是': 'green', '否': 'red' };
 
 export default function Reviews() {
+  const [type, setType] = useState<string | undefined>(undefined);
+
   const { data, isLoading } = useQuery({
-    queryKey: ['review-summary'],
-    queryFn: () => adminApi.getReviewSummary().then((r) => r.data),
+    queryKey: ['review-summary', type],
+    queryFn: () => adminApi.getReviewSummary(type).then((r) => r.data),
   });
 
   const handleExport = async () => {
@@ -52,9 +55,21 @@ export default function Reviews() {
 
   return (
     <div>
-      <Button icon={<DownloadOutlined />} onClick={handleExport} type="primary" style={{ marginBottom: 16 }}>
-        导出评审 Excel
-      </Button>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
+        <Button icon={<DownloadOutlined />} onClick={handleExport} type="primary">
+          导出评审 Excel
+        </Button>
+        <Select
+          placeholder="作品类型"
+          value={type}
+          onChange={setType}
+          allowClear
+          style={{ width: 140 }}
+        >
+          <Select.Option value="内核赛">内核赛</Select.Option>
+          <Select.Option value="功能赛">功能赛</Select.Option>
+        </Select>
+      </div>
       <Table
         columns={columns} dataSource={matrix} rowKey="projectCode" loading={isLoading}
         scroll={{ x: 'max-content' }}

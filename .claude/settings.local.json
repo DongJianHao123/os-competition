@@ -25,7 +25,18 @@
       "Bash(pip install:*)",
       "Bash(ls:*)",
       "Bash(node import-files.mjs)",
-      "Bash(pnpm dev:*)"
+      "Bash(pnpm dev:*)",
+      "Bash(node reset-pwd.mjs)",
+      "Bash(node update-judge-info.mjs)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":3001\")",
+      "Bash(taskkill:*)",
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(findstr \"LISTENING\")",
+      "Bash(node check-plagiarism.mjs)",
+      "mcp__ide__getDiagnostics",
+      "Bash(node -e \"const antd = require\\(''antd/package.json''\\); console.log\\(antd.version\\);\")",
+      "Bash(grep -r '\"\"antd\"\"' package.json)"
     ]
   }
 }

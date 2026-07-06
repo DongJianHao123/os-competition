@@ -7,12 +7,23 @@ import { PrismaService } from '../prisma/prisma.service';
 export class AdminService {
   constructor(private prisma: PrismaService) {}
 
-  async listJudges(page: number, pageSize: number) {
-    const where = { role: 'judge' as const };
+  async listJudges(page: number, pageSize: number, search?: string, judgeType?: string) {
+    const where: any = { role: 'judge' as const };
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { phone: { contains: search } },
+        { school: { contains: search } },
+        { email: { contains: search } },
+      ];
+    }
+    if (judgeType) {
+      where.judgeType = judgeType;
+    }
     const [data, total] = await Promise.all([
       this.prisma.user.findMany({
         where,
-        select: { id: true, name: true, phone: true, judgeType: true, isActive: true, createdAt: true },
+        select: { id: true, name: true, phone: true, judgeType: true, school: true, email: true, isActive: true, createdAt: true },
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { createdAt: 'desc' },
@@ -22,23 +33,23 @@ export class AdminService {
     return { data, total, page, pageSize };
   }
 
-  async createJudge(dto: { name: string; phone: string; password: string; judgeType: string }) {
+  async createJudge(dto: { name: string; phone: string; password: string; judgeType: string; school?: string; email?: string }) {
     const exists = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
     if (exists) throw new BadRequestException('手机号已存在');
     const passwordHash = await bcrypt.hash(dto.password, 10);
     return this.prisma.user.create({
-      data: { name: dto.name, phone: dto.phone, passwordHash, role: 'judge', judgeType: dto.judgeType },
-      select: { id: true, name: true, phone: true, judgeType: true, isActive: true, createdAt: true },
+      data: { name: dto.name, phone: dto.phone, passwordHash, role: 'judge', judgeType: dto.judgeType, school: dto.school, email: dto.email },
+      select: { id: true, name: true, phone: true, judgeType: true, school: true, email: true, isActive: true, createdAt: true },
     });
   }
 
-  async updateJudge(id: number, dto: { name?: string; phone?: string; isActive?: boolean; judgeType?: string }) {
+  async updateJudge(id: number, dto: { name?: string; phone?: string; isActive?: boolean; judgeType?: string; school?: string; email?: string }) {
     const judge = await this.prisma.user.findFirst({ where: { id, role: 'judge' } });
     if (!judge) throw new NotFoundException('评委不存在');
     return this.prisma.user.update({
       where: { id },
       data: dto,
-      select: { id: true, name: true, phone: true, judgeType: true, isActive: true, createdAt: true },
+      select: { id: true, name: true, phone: true, judgeType: true, school: true, email: true, isActive: true, createdAt: true },
     });
   }
 
@@ -82,7 +93,7 @@ export class AdminService {
     return { count, filename };
   }
 
-  async listProjects(page: number, pageSize: number, search?: string) {
+  async listProjects(page: number, pageSize: number, search?: string, type?: string, status?: string) {
     const where: any = {};
     if (search) {
       where.OR = [
@@ -91,6 +102,12 @@ export class AdminService {
         { leaderName: { contains: search } },
         { school: { contains: search } },
       ];
+    }
+    if (type) {
+      where.type = type;
+    }
+    if (status) {
+      where.status = status;
     }
     const [data, total] = await Promise.all([
       this.prisma.project.findMany({
@@ -185,25 +202,35 @@ export class AdminService {
     return { message: '提交记录分析已清除' };
   }
 
-  async getImportLogs(page: number, pageSize: number) {
+  async getImportLogs(page: number, pageSize: number, search?: string) {
+    const where: any = {};
+    if (search) {
+      where.filename = { contains: search };
+    }
     const [data, total] = await Promise.all([
       this.prisma.importLog.findMany({
+        where,
         include: { operator: { select: { name: true } } },
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.importLog.count(),
+      this.prisma.importLog.count({ where }),
     ]);
     return { data, total, page, pageSize };
   }
 
-  async getReviewSummary() {
+  async getReviewSummary(type?: string) {
     const judges = await this.prisma.user.findMany({
       where: { role: 'judge', isActive: true },
       select: { id: true, name: true },
     });
+    const projectWhere: any = {};
+    if (type) {
+      projectWhere.type = type;
+    }
     const projects = await this.prisma.project.findMany({
+      where: projectWhere,
       select: { id: true, projectCode: true, teamName: true },
     });
     const reviews = await this.prisma.review.findMany();
@@ -223,8 +250,13 @@ export class AdminService {
   }
 
   // --- 分组管理 ---
-  async listGroups() {
+  async listGroups(type?: string) {
+    const where: any = {};
+    if (type) {
+      where.type = type;
+    }
     return this.prisma.reviewGroup.findMany({
+      where,
       include: {
         _count: { select: { judges: true, projects: true } },
       },
@@ -249,7 +281,7 @@ export class AdminService {
     const group = await this.prisma.reviewGroup.findUnique({
       where: { id },
       include: {
-        judges: { include: { judge: { select: { id: true, name: true, phone: true, judgeType: true } } } },
+        judges: { include: { judge: { select: { id: true, name: true, phone: true, judgeType: true, school: true, email: true } } } },
         projects: { select: { id: true, projectCode: true, teamName: true, leaderName: true, school: true, type: true, status: true } },
       },
     });

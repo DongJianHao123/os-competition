@@ -13,7 +13,7 @@ export default function LoginPage() {
     try {
       const { user } = await login(values.phone, values.password);
       message.success('登录成功');
-      navigate(user.role === 'admin' ? '/admin/projects-manage' : '/judge/projects', { replace: true });
+      navigate(user.role === 'admin' ? '/admin/projects-manage' : '/judge/groups', { replace: true });
     } catch {
       message.error('登录失败，请检查手机号或密码');
     } finally {

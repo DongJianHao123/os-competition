@@ -1,8 +1,8 @@
 import client from './client';
 
 export const adminApi = {
-  listJudges: (page: number, pageSize: number) =>
-    client.get('/admin/judges', { params: { page, pageSize } }),
+  listJudges: (page: number, pageSize: number, search?: string, judgeType?: string) =>
+    client.get('/admin/judges', { params: { page, pageSize, search, judgeType } }),
   createJudge: (data: { name: string; phone: string; password: string }) =>
     client.post('/admin/judges', data),
   updateJudge: (id: number, data: any) =>
@@ -14,12 +14,12 @@ export const adminApi = {
     form.append('file', file);
     return client.post('/admin/projects/import', form);
   },
-  getImportLogs: (page: number, pageSize: number) =>
-    client.get('/admin/import-logs', { params: { page, pageSize } }),
-  getReviewSummary: () => client.get('/admin/reviews/summary'),
+  getImportLogs: (page: number, pageSize: number, search?: string) =>
+    client.get('/admin/import-logs', { params: { page, pageSize, search } }),
+  getReviewSummary: (type?: string) => client.get('/admin/reviews/summary', { params: { type } }),
   exportReviews: () => client.get('/admin/export', { responseType: 'blob' }),
-  listProjects: (page: number, pageSize: number, search?: string) =>
-    client.get('/admin/projects', { params: { page, pageSize, search } }),
+  listProjects: (page: number, pageSize: number, search?: string, type?: string, status?: string) =>
+    client.get('/admin/projects', { params: { page, pageSize, search, type, status } }),
   getProject: (id: number) => client.get(`/admin/projects/${id}`),
   updateProject: (id: number, data: any) => client.put(`/admin/projects/${id}`, data),
   deleteProject: (id: number) => client.delete(`/admin/projects/${id}`),
@@ -35,7 +35,7 @@ export const adminApi = {
     client.get(`/admin/projects/${projectId}/commit-analysis`),
   deleteCommitAnalysis: (projectId: number) =>
     client.delete(`/admin/projects/${projectId}/commit-analysis`),
-  listGroups: () => client.get('/admin/groups'),
+  listGroups: (type?: string) => client.get('/admin/groups', { params: { type } }),
   createGroup: (data: { name: string; type: string }) => client.post('/admin/groups', data),
   updateGroup: (id: number, data: { name?: string; type?: string }) =>
     client.put(`/admin/groups/${id}`, data),

@@ -6,14 +6,16 @@ import { adminApi } from '../../api/admin';
 
 export default function Judges() {
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [judgeType, setJudgeType] = useState<string | undefined>(undefined);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingJudge, setEditingJudge] = useState<any>(null);
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['judges', page],
-    queryFn: () => adminApi.listJudges(page, 10).then((r) => r.data),
+    queryKey: ['judges', page, search, judgeType],
+    queryFn: () => adminApi.listJudges(page, 10, search || undefined, judgeType).then((r) => r.data),
   });
 
   const createMut = useMutation({
@@ -45,6 +47,8 @@ export default function Judges() {
     },
     { title: '姓名', dataIndex: 'name', key: 'name' },
     { title: '手机号', dataIndex: 'phone', key: 'phone' },
+    { title: '学校', dataIndex: 'school', key: 'school', width: 160 },
+    { title: '邮箱', dataIndex: 'email', key: 'email', width: 200 },
     {
       title: '评委类型', dataIndex: 'judgeType', key: 'judgeType', width: 100,
       render: (v: string) => (
@@ -80,7 +84,7 @@ export default function Judges() {
     form.validateFields().then((values) => {
       if (editingJudge) {
         updateMut.mutate(
-          { id: editingJudge.id, data: { name: values.name, phone: values.phone, judgeType: values.judgeType } },
+          { id: editingJudge.id, data: { name: values.name, phone: values.phone, judgeType: values.judgeType, school: values.school, email: values.email } },
           { onSuccess: () => setModalOpen(false) },
         );
       } else {
@@ -91,13 +95,35 @@ export default function Judges() {
 
   return (
     <div>
-      <Button
-        type="primary" icon={<PlusOutlined />}
-        onClick={() => { setEditingJudge(null); form.resetFields(); setModalOpen(true); }}
-        style={{ marginBottom: 16 }}
-      >
-        新增评委
-      </Button>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
+        <Button
+          type="primary" icon={<PlusOutlined />}
+          onClick={() => { setEditingJudge(null); form.resetFields(); setModalOpen(true); }}
+        >
+          新增评委
+        </Button>
+        <Select
+          placeholder="评委类型"
+          value={judgeType}
+          onChange={(v) => { setJudgeType(v); setPage(1); }}
+          allowClear
+          style={{ width: 140 }}
+        >
+          <Select.Option value="内核赛">内核赛</Select.Option>
+          <Select.Option value="功能赛">功能赛</Select.Option>
+        </Select>
+        <Input.Search
+          placeholder="搜索姓名、手机号、学校、邮箱"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onSearch={() => setPage(1)}
+          style={{ width: 300 }}
+          allowClear
+        />
+        <span style={{ lineHeight: '32px', color: '#999' }}>
+          共 {data?.total || 0} 条记录
+        </span>
+      </div>
       <Table
         columns={columns} dataSource={data?.data || []} rowKey="id" loading={isLoading}
         pagination={{ current: page, total: data?.total || 0, onChange: setPage }}
@@ -118,6 +144,12 @@ export default function Judges() {
               <Select.Option value="内核赛">内核赛</Select.Option>
               <Select.Option value="功能赛">功能赛</Select.Option>
             </Select>
+          </Form.Item>
+          <Form.Item name="school" label="学校">
+            <Input />
+          </Form.Item>
+          <Form.Item name="email" label="邮箱">
+            <Input />
           </Form.Item>
           {!editingJudge && (
             <Form.Item name="password" label="密码" rules={[{ required: true }]}>
