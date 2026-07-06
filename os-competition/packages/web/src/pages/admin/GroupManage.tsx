@@ -165,8 +165,8 @@ export default function GroupManage() {
   };
 
   // Transfer data
-  const currentJudgeIds = new Set((groupDetail?.judges || []).map((j: any) => j.judge?.id || j.judgeId));
-  const currentProjectIds = new Set((groupDetail?.projects || []).map((p: any) => p.id));
+  const currentJudgeIds = new Set<number>((groupDetail?.judges || []).map((j: any) => j.judge?.id || j.judgeId));
+  const currentProjectIds = new Set<number>((groupDetail?.projects || []).map((p: any) => p.id));
 
   const judgeTransferData = (judges?.data || []).map((j: any) => ({
     key: j.id,
@@ -237,14 +237,15 @@ export default function GroupManage() {
               dataSource={judgeTransferData}
               targetKeys={[...currentJudgeIds]}
               titles={['可选评委', '已选评委']}
-              render={(item) => item.title}
+              render={(item) => item.title ?? ''}
               showSearch
-              filterOption={(inputValue, item) => item.title.toLowerCase().includes(inputValue.toLowerCase())}
+              filterOption={(inputValue, item) => (item.title ?? '').toLowerCase().includes(inputValue.toLowerCase())}
               listStyle={{ width: 280, height: 280 }}
               onChange={(targetKeys) => {
-                const added = targetKeys.filter((k: number) => !currentJudgeIds.has(k));
-                const removed = [...currentJudgeIds].filter((k: number) => !targetKeys.includes(k));
-                if (added.length) addJudgesMut.mutate({ groupId: memberGroupId!, judgeIds: added as number[] });
+                const keys = targetKeys as number[];
+                const added = keys.filter((k) => !currentJudgeIds.has(k));
+                const removed = [...currentJudgeIds].filter((k) => !keys.includes(k));
+                if (added.length) addJudgesMut.mutate({ groupId: memberGroupId!, judgeIds: added });
                 if (removed.length) removeJudgeMut.mutate({ groupId: memberGroupId!, judgeId: removed[0] });
               }}
             />
@@ -253,14 +254,15 @@ export default function GroupManage() {
               dataSource={projectTransferData}
               targetKeys={[...currentProjectIds]}
               titles={['可选作品', '已选作品']}
-              render={(item) => item.title}
+              render={(item) => item.title ?? ''}
               showSearch
-              filterOption={(inputValue, item) => item.title.toLowerCase().includes(inputValue.toLowerCase())}
+              filterOption={(inputValue, item) => (item.title ?? '').toLowerCase().includes(inputValue.toLowerCase())}
               listStyle={{ width: 280, height: 280 }}
               onChange={(targetKeys) => {
-                const added = targetKeys.filter((k: number) => !currentProjectIds.has(k));
-                const removed = [...currentProjectIds].filter((k: number) => !targetKeys.includes(k));
-                if (added.length) addProjectsMut.mutate({ groupId: memberGroupId!, projectIds: added as number[] });
+                const keys = targetKeys as number[];
+                const added = keys.filter((k) => !currentProjectIds.has(k));
+                const removed = [...currentProjectIds].filter((k) => !keys.includes(k));
+                if (added.length) addProjectsMut.mutate({ groupId: memberGroupId!, projectIds: added });
                 if (removed.length) removeProjectMut.mutate({ groupId: memberGroupId!, projectId: removed[0] });
               }}
             />

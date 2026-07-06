@@ -2,7 +2,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Button, Typography, Avatar, Dropdown, Space } from 'antd';
 import {
   LogoutOutlined, UserOutlined, HomeOutlined,
-  ApartmentOutlined, FileTextOutlined,
+  ApartmentOutlined,
 } from '@ant-design/icons';
 
 const { Header, Content, Footer } = Layout;
