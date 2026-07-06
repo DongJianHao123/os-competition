@@ -16,11 +16,20 @@ const { Title, Text } = Typography;
 export default function Review() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('plagiarism');
 
   const { data, isLoading } = useQuery({
     queryKey: ['project-detail', id],
     queryFn: () => judgeApi.getProject(Number(id)).then((r) => r.data),
+  });
+
+  const { data: plagiarismFiles, isLoading: plagiarismLoading } = useQuery({
+    queryKey: ['plagiarism-files', id],
+    queryFn: () => judgeApi.getPlagiarismFiles(Number(id)).then((r) => r.data),
+  });
+
+  const { data: commitFiles, isLoading: commitLoading } = useQuery({
+    queryKey: ['commit-analysis', id],
+    queryFn: () => judgeApi.getCommitAnalysis(Number(id)).then((r) => r.data),
   });
 
   if (isLoading) {
@@ -36,8 +45,11 @@ export default function Review() {
 
   const rankUrl = 'https://course.educg.net/pages/contest/contest_rank.jsp?contestID=Z7zWWwTfti0&my=false&contestCID=0#contestSubAn';
 
+  const hasPlagiarism = (plagiarismFiles?.length ?? 0) > 0 || plagiarismLoading;
+  const hasCommit = (commitFiles?.length ?? 0) > 0 || commitLoading;
+
   const tabItems = [
-    {
+    ...(hasPlagiarism ? [{
       key: 'plagiarism',
       label: <span><FileSearchOutlined /> 查重结果</span>,
       children: (
@@ -46,8 +58,8 @@ export default function Review() {
           getFiles={judgeApi.getPlagiarismFiles}
         />
       ),
-    },
-    {
+    }] : []),
+    ...(hasCommit ? [{
       key: 'commit',
       label: <span><HistoryOutlined /> 提交记录</span>,
       children: (
@@ -56,13 +68,16 @@ export default function Review() {
           getFiles={judgeApi.getCommitAnalysis}
         />
       ),
-    },
+    }] : []),
     {
       key: 'rank',
       label: <span><OrderedListOutlined /> 排行榜</span>,
       children: null,
     },
   ];
+
+  const defaultTab = hasPlagiarism ? 'plagiarism' : hasCommit ? 'commit' : 'rank';
+  const [activeTab, setActiveTab] = useState(defaultTab);
 
   return (
     <div>

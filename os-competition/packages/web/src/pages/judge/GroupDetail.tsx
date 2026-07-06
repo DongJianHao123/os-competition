@@ -53,13 +53,6 @@ export default function GroupDetail() {
         <Tag color={v === '内核赛' ? 'purple' : 'cyan'} style={{ borderRadius: 6 }}>{v || '功能赛'}</Tag>
       ),
     },
-    {
-      title: '评审状态', key: 'reviewStatus', width: 100,
-      render: (_: any, record: any) =>
-        reviewedIds.has(record.id)
-          ? <Tag color="success" style={{ borderRadius: 6 }}>已评审</Tag>
-          : <Tag style={{ borderRadius: 6 }}>待评审</Tag>,
-    },
   ];
 
   return (
@@ -167,20 +160,9 @@ export default function GroupDetail() {
             onClick: () => navigate(`/judge/projects/${record.id}`),
             style: { cursor: 'pointer' },
           })}
-          rowClassName={(record) =>
-            reviewedIds.has(record.id) ? 'reviewed-row' : ''
-          }
         />
       </Card>
 
-      <style>{`
-        .reviewed-row {
-          background: #f6ffed;
-        }
-        .reviewed-row:hover > td {
-          background: #eaffd8 !important;
-        }
-      `}</style>
     </div>
   );
 }
