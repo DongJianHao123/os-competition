@@ -16,6 +16,7 @@ const { Title, Text } = Typography;
 export default function Review() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('plagiarism');
 
   const { data, isLoading } = useQuery({
     queryKey: ['project-detail', id],
@@ -32,6 +33,16 @@ export default function Review() {
     queryFn: () => judgeApi.getCommitAnalysis(Number(id)).then((r) => r.data),
   });
 
+  const hasPlagiarism = (plagiarismFiles?.length ?? 0) > 0 || plagiarismLoading;
+  const hasCommit = (commitFiles?.length ?? 0) > 0 || commitLoading;
+
+  // 查重无数据时自动切换默认 tab
+  if (!hasPlagiarism && activeTab === 'plagiarism') {
+    const isFeature = data?.project?.type?.startsWith('功能赛');
+    const next = hasCommit ? 'commit' : isFeature ? '' : 'rank';
+    queueMicrotask(() => setActiveTab(next));
+  }
+
   if (isLoading) {
     return (
       <div style={{ textAlign: 'center', padding: 120 }}>
@@ -44,9 +55,6 @@ export default function Review() {
   if (!project) return <div>作品不存在</div>;
 
   const rankUrl = 'https://course.educg.net/pages/contest/contest_rank.jsp?contestID=Z7zWWwTfti0&my=false&contestCID=0#contestSubAn';
-
-  const hasPlagiarism = (plagiarismFiles?.length ?? 0) > 0 || plagiarismLoading;
-  const hasCommit = (commitFiles?.length ?? 0) > 0 || commitLoading;
 
   const tabItems = [
     ...(hasPlagiarism ? [{
@@ -69,15 +77,12 @@ export default function Review() {
         />
       ),
     }] : []),
-    {
+    ...(!project.type?.startsWith('功能赛') ? [{
       key: 'rank',
       label: <span><OrderedListOutlined /> 排行榜</span>,
       children: null,
-    },
+    }] : []),
   ];
-
-  const defaultTab = hasPlagiarism ? 'plagiarism' : hasCommit ? 'commit' : 'rank';
-  const [activeTab, setActiveTab] = useState(defaultTab);
 
   return (
     <div>

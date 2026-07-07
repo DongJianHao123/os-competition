@@ -156,7 +156,7 @@ export default function GroupDetail() {
             onChange: setPage,
             showTotal: (t) => `共 ${t} 条`,
           }}
-          onRow={(record) => ({
+          onRow={(record: any) => ({
             onClick: () => navigate(`/judge/projects/${record.id}`),
             style: { cursor: 'pointer' },
           })}

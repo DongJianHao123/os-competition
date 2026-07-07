@@ -27,8 +27,119 @@ function parseToc(text: string): TocItem[] {
   return items;
 }
 
+function parseCells(line: string): string[] {
+  return line
+    .replace(/^\s*\|/, '')
+    .replace(/\|\s*$/, '')
+    .split('|')
+    .map((c) => c.trim());
+}
+
+function buildTableHtml(headers: string[][], bodyRows: string[][]): string {
+  return (
+    '<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:14px">' +
+    '<thead>' +
+    headers
+      .map(
+        (row) =>
+          '<tr>' +
+          row
+            .map(
+              (cell) =>
+                `<th style="padding:8px 12px;border:1px solid #f0f0f0;background:#fafafa;font-weight:600;text-align:left">${cell}</th>`,
+            )
+            .join('') +
+          '</tr>',
+      )
+      .join('') +
+    '</thead>' +
+    '<tbody>' +
+    bodyRows
+      .map(
+        (row, ri) =>
+          '<tr style="background:' +
+          (ri % 2 === 0 ? '#fff' : '#fafafa') +
+          '">' +
+          row
+            .map(
+              (cell) =>
+                `<td style="padding:8px 12px;border:1px solid #f0f0f0">${cell}</td>`,
+            )
+            .join('') +
+          '</tr>',
+      )
+      .join('') +
+    '</tbody>' +
+    '</table>'
+  );
+}
+
+function renderTables(text: string): string {
+  const lines = text.split('\n');
+  const tableLineRegex = /^\s*\|.*\|\s*$/;
+  const sepRegex = /^[\|\s\-:]+$/;
+
+  const output: string[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    // Find potential table start
+    let tableStart = -1;
+    for (let j = i; j < lines.length; j++) {
+      if (tableLineRegex.test(lines[j])) {
+        tableStart = j;
+        break;
+      }
+    }
+
+    if (tableStart === -1) {
+      output.push(...lines.slice(i));
+      break;
+    }
+
+    // Output lines before the table
+    output.push(...lines.slice(i, tableStart));
+
+    // Find the end of consecutive table lines
+    let tableEnd = tableStart;
+    while (tableEnd < lines.length && tableLineRegex.test(lines[tableEnd])) {
+      tableEnd++;
+    }
+
+    const tableLines = lines.slice(tableStart, tableEnd);
+
+    // Check if there's a separator row
+    const sepIdxInBlock = tableLines.slice(1).findIndex((l) => sepRegex.test(l));
+    const hasSep = sepIdxInBlock !== -1;
+
+    // Check column count consistency (for tables without separator)
+    const allCellCounts = tableLines.map((l) => parseCells(l).length);
+    const consistentCols = allCellCounts.every((c) => c === allCellCounts[0] && c > 0);
+
+    if (hasSep && tableLines.length >= 3) {
+      // Standard table with separator row
+      const sepIdx = sepIdxInBlock + 1;
+      const headers = tableLines.slice(0, sepIdx).map(parseCells);
+      const bodyRows = tableLines.slice(sepIdx + 1).map(parseCells);
+      output.push(buildTableHtml(headers, bodyRows));
+    } else if (!hasSep && tableLines.length >= 2 && consistentCols) {
+      // Table without separator row: first row is header
+      const headers = [parseCells(tableLines[0])];
+      const bodyRows = tableLines.slice(1).map(parseCells);
+      output.push(buildTableHtml(headers, bodyRows));
+    } else {
+      // Not a valid table
+      output.push(...tableLines);
+    }
+
+    i = tableEnd;
+  }
+
+  return output.join('\n');
+}
+
 function renderMarkdown(text: string): string {
-  let html = text
+  let html = renderTables(text)
     .replace(/^#### (.+)$/gm, (_, title) => {
       const id = `md-${title.trim().replace(/[^\w\u4e00-\u9fff]+/g, '-').replace(/^-|-$/g, '')}`;
       return `<h4 id="${id}">${title}</h4>`;
