@@ -1,9 +1,8 @@
-import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Descriptions, Card, Spin, Tabs, Tag, Button, Typography } from 'antd';
 import {
   ArrowLeftOutlined, FileSearchOutlined,
-  HistoryOutlined, InfoCircleOutlined,
+  CodeOutlined, InfoCircleOutlined,
   LinkOutlined, TeamOutlined, HomeOutlined, TrophyOutlined,
   OrderedListOutlined,
 } from '@ant-design/icons';
@@ -16,32 +15,11 @@ const { Title, Text } = Typography;
 export default function Review() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('plagiarism');
 
   const { data, isLoading } = useQuery({
     queryKey: ['project-detail', id],
     queryFn: () => judgeApi.getProject(Number(id)).then((r) => r.data),
   });
-
-  const { data: plagiarismFiles, isLoading: plagiarismLoading } = useQuery({
-    queryKey: ['plagiarism-files', id],
-    queryFn: () => judgeApi.getPlagiarismFiles(Number(id)).then((r) => r.data),
-  });
-
-  const { data: commitFiles, isLoading: commitLoading } = useQuery({
-    queryKey: ['commit-analysis', id],
-    queryFn: () => judgeApi.getCommitAnalysis(Number(id)).then((r) => r.data),
-  });
-
-  const hasPlagiarism = (plagiarismFiles?.length ?? 0) > 0 || plagiarismLoading;
-  const hasCommit = (commitFiles?.length ?? 0) > 0 || commitLoading;
-
-  // 查重无数据时自动切换默认 tab
-  if (!hasPlagiarism && activeTab === 'plagiarism') {
-    const isFeature = data?.project?.type?.startsWith('功能赛');
-    const next = hasCommit ? 'commit' : isFeature ? '' : 'rank';
-    queueMicrotask(() => setActiveTab(next));
-  }
 
   if (isLoading) {
     return (
@@ -54,39 +32,50 @@ export default function Review() {
   const project = data?.project;
   if (!project) return <div>作品不存在</div>;
 
+  const isFeature = project.type?.startsWith('功能赛');
   const rankUrl = 'https://course.educg.net/pages/contest/contest_rank.jsp?contestID=Z7zWWwTfti0&my=false&contestCID=0#contestSubAn';
 
-  const tabItems = [
-    ...(hasPlagiarism ? [{
-      key: 'plagiarism',
-      label: <span><FileSearchOutlined /> 查重结果</span>,
-      children: (
-        <MarkdownViewer
-          projectId={project.id}
-          getFiles={judgeApi.getPlagiarismFiles}
-        />
-      ),
-    }] : []),
-    ...(hasCommit ? [{
-      key: 'commit',
-      label: <span><HistoryOutlined /> 提交记录</span>,
-      children: (
-        <MarkdownViewer
-          projectId={project.id}
-          getFiles={judgeApi.getCommitAnalysis}
-        />
-      ),
-    }] : []),
-    ...(!project.type?.startsWith('功能赛') ? [{
-      key: 'rank',
-      label: <span><OrderedListOutlined /> 排行榜</span>,
-      children: null,
-    }] : []),
-  ];
+  const tabItems = isFeature
+    ? [{
+        key: 'commit',
+        label: <span><CodeOutlined /> 代码提交分析</span>,
+        children: (
+          <MarkdownViewer
+            projectId={project.id}
+            getFiles={judgeApi.getCommitAnalysis}
+          />
+        ),
+      }]
+    : [
+      {
+        key: 'plagiarism',
+        label: <span><FileSearchOutlined /> 查重分析</span>,
+        children: (
+          <MarkdownViewer
+            projectId={project.id}
+            getFiles={judgeApi.getPlagiarismFiles}
+          />
+        ),
+      },
+      {
+        key: 'commit',
+        label: <span><CodeOutlined /> 代码提交分析</span>,
+        children: (
+          <MarkdownViewer
+            projectId={project.id}
+            getFiles={judgeApi.getCommitAnalysis}
+          />
+        ),
+      },
+      {
+        key: 'rank',
+        label: <span><OrderedListOutlined /> 排行榜</span>,
+        children: null,
+      },
+    ];
 
   return (
     <div>
-      {/* Back Navigation */}
       <Button
         type="text"
         icon={<ArrowLeftOutlined />}
@@ -96,7 +85,6 @@ export default function Review() {
         返回
       </Button>
 
-      {/* Project Info Card */}
       <Card
         title={
           <span style={{ fontSize: 16, fontWeight: 600 }}>
@@ -107,7 +95,6 @@ export default function Review() {
         style={{ borderRadius: 12, marginBottom: 24 }}
         styles={{ body: { padding: '20px 24px' } }}
       >
-        {/* Project Title Area */}
         <div style={{
           marginBottom: 20,
           padding: '16px 20px',
@@ -160,28 +147,25 @@ export default function Review() {
         </Descriptions>
       </Card>
 
-      {/* Review Materials */}
       <Card
         title={
           <span style={{ fontSize: 16, fontWeight: 600 }}>
             <FileSearchOutlined style={{ marginRight: 8, color: '#722ed1' }} />
-            评审材料
+            作品材料
           </span>
         }
         style={{ borderRadius: 12 }}
         styles={{ body: { padding: '12px 24px' } }}
       >
         <Tabs
-          activeKey={activeTab}
+          defaultActiveKey={isFeature ? 'commit' : 'plagiarism'}
           items={tabItems}
           size="large"
           tabBarStyle={{ marginBottom: 8 }}
-          onChange={(key) => {
+          onTabClick={(key) => {
             if (key === 'rank') {
               window.open(rankUrl, '_blank', 'noopener,noreferrer');
-              return;
             }
-            setActiveTab(key);
           }}
         />
       </Card>

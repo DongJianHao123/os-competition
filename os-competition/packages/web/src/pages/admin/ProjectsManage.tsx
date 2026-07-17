@@ -169,7 +169,7 @@ export default function ProjectsManage() {
     },
     {
       title: '状态', dataIndex: 'status', key: 'status', width: 90,
-      render: (v: string) => <Tag color={v === '待评审' ? 'blue' : 'green'}>{v}</Tag>,
+      render: (v: string) => <Tag color={v === '待完成' ? 'blue' : 'green'}>{v}</Tag>,
     },
     {
       title: '操作', key: 'actions', width: 320,
@@ -183,12 +183,12 @@ export default function ProjectsManage() {
           <Button size="small" icon={<FileSearchOutlined />} onClick={() => {
             setPlagProject(record);
             setPlagModalOpen(true);
-          }}>查重</Button>
+          }}>查重分析</Button>
           <Button size="small" icon={<HistoryOutlined />} onClick={() => {
             setCommitProject(record);
             setCommitModalOpen(true);
             setCommitKey(k => k + 1);
-          }}>提交记录</Button>
+          }}>代码提交分析</Button>
           <Popconfirm title="确定删除？将同时删除关联数据" onConfirm={() => deleteMut.mutate(record.id)}>
             <Button size="small" danger icon={<DeleteOutlined />}>删除</Button>
           </Popconfirm>
@@ -234,8 +234,8 @@ export default function ProjectsManage() {
           allowClear
           style={{ width: 130 }}
         >
-          <Select.Option value="待评审">待评审</Select.Option>
-          <Select.Option value="已评审">已评审</Select.Option>
+          <Select.Option value="待完成">待完成</Select.Option>
+          <Select.Option value="已完成">已完成</Select.Option>
         </Select>
         <span style={{ lineHeight: '32px', color: '#999' }}>
           共 {data?.total || 0} 条记录

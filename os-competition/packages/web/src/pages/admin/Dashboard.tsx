@@ -27,7 +27,7 @@ export default function Dashboard() {
         <Col span={6}>
           <Card>
             <Statistic
-              title="评审进度"
+              title="进度"
               value={totalReviews}
               suffix={`/ ${totalPossible}`}
             />

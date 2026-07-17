@@ -47,9 +47,9 @@ export default function Projects() {
       ),
     },
     {
-      title: '评审状态', key: 'reviewStatus',
+      title: '状态', key: 'reviewStatus',
       render: (_: any, record: any) =>
-        reviewedIds.has(record.id) ? <Tag color="green">已评审</Tag> : <Tag>待评审</Tag>,
+        reviewedIds.has(record.id) ? <Tag color="green">已完成</Tag> : <Tag>待完成</Tag>,
     },
     {
       title: '操作', key: 'actions',
@@ -64,7 +64,7 @@ export default function Projects() {
               setPlagKey(k => k + 1);
             }}
           >
-            查重
+            查重分析
           </Button>
           <Button
             type="link"
@@ -75,7 +75,7 @@ export default function Projects() {
               setCommitKey(k => k + 1);
             }}
           >
-            提交记录
+            代码提交分析
           </Button>
         </>
       ),

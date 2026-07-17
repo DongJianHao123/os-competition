@@ -36,7 +36,8 @@
       "Bash(node check-plagiarism.mjs)",
       "mcp__ide__getDiagnostics",
       "Bash(node -e \"const antd = require\\(''antd/package.json''\\); console.log\\(antd.version\\);\")",
-      "Bash(grep -r '\"\"antd\"\"' package.json)"
+      "Bash(grep -r '\"\"antd\"\"' package.json)",
+      "Bash(git:*)"
     ]
   }
 }

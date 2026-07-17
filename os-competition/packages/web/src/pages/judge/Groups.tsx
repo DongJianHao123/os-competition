@@ -29,10 +29,10 @@ export default function Groups() {
       <div style={{ marginBottom: 32 }}>
         <Title level={3} style={{ margin: 0, fontWeight: 700 }}>
           <ApartmentOutlined style={{ marginRight: 10, color: '#667eea' }} />
-          我的评审分组
+          我的分组
         </Title>
         <Text type="secondary" style={{ fontSize: 15, marginTop: 4, display: 'block' }}>
-          选择分组查看作品列表并开始评审
+          选择分组查看作品列表
         </Text>
       </div>
 

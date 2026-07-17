@@ -20,7 +20,7 @@ export default function Reviews() {
     const url = window.URL.createObjectURL(new Blob([res.data]));
     const a = document.createElement('a');
     a.href = url;
-    a.download = '评审结果.xlsx';
+    a.download = '数据导出.xlsx';
     a.click();
     URL.revokeObjectURL(url);
     message.success('导出成功');
@@ -37,7 +37,7 @@ export default function Reviews() {
       key: `judge_${j.id}`,
       render: (_: any, record: any) => {
         const r = record[`judge_${j.id}`];
-        if (!r) return <Tag>未评</Tag>;
+        if (!r) return <Tag>暂无</Tag>;
         return (
           <div>
             {r.docScore && <Tag color={scoreColorMap[r.docScore]}>文档:{r.docScore}</Tag>}
@@ -57,7 +57,7 @@ export default function Reviews() {
     <div>
       <div style={{ marginBottom: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
         <Button icon={<DownloadOutlined />} onClick={handleExport} type="primary">
-          导出评审 Excel
+          导出 Excel
         </Button>
         <Select
           placeholder="作品类型"

@@ -19,11 +19,11 @@ export default function MyReviews() {
     { title: '作品编号', dataIndex: ['project', 'projectCode'], key: 'projectCode' },
     { title: '团队', dataIndex: ['project', 'teamName'], key: 'teamName' },
     {
-      title: '文档评审', dataIndex: 'docScore', key: 'docScore',
+      title: '文档', dataIndex: 'docScore', key: 'docScore',
       render: (v: string) => (v ? <Tag color={scoreColorMap[v]}>{v}</Tag> : '-'),
     },
     {
-      title: '代码评审', dataIndex: 'codeScore', key: 'codeScore',
+      title: '代码', dataIndex: 'codeScore', key: 'codeScore',
       render: (v: string) => (v ? <Tag color={scoreColorMap[v]}>{v}</Tag> : '-'),
     },
     {
@@ -32,7 +32,7 @@ export default function MyReviews() {
         v ? <Tag color={v === '是' ? 'green' : 'red'}>{v === '是' ? '进入' : '不进入'}</Tag> : '-',
     },
     {
-      title: '评审时间', dataIndex: 'reviewedAt', key: 'reviewedAt',
+      title: '时间', dataIndex: 'reviewedAt', key: 'reviewedAt',
       render: (v: string) => (v ? new Date(v).toLocaleString() : '-'),
     },
     {
@@ -47,7 +47,7 @@ export default function MyReviews() {
 
   return (
     <div>
-      <h2>我的评审历史</h2>
+      <h2>我的历史</h2>
       <Table
         columns={columns} dataSource={data?.data || []} rowKey="id" loading={isLoading}
         pagination={{ current: page, total: data?.total || 0, onChange: setPage }}

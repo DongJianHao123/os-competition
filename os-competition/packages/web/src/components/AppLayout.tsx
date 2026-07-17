@@ -14,7 +14,7 @@ const adminMenuItems = [
 ];
 
 const judgeMenuItems = [
-  { key: '/judge/groups', icon: <ApartmentOutlined />, label: '评审分组' },
+  { key: '/judge/groups', icon: <ApartmentOutlined />, label: '分组' },
 ];
 
 export default function AppLayout({ role }: { role: 'admin' | 'judge' }) {
@@ -42,7 +42,7 @@ export default function AppLayout({ role }: { role: 'admin' | 'judge' }) {
           borderBottom: role === 'admin' ? '1px solid rgba(255,255,255,0.08)' : 'none',
         }}>
           <Typography.Text strong style={{ color: role === 'admin' ? '#e8c170' : 'white', fontSize: collapsed ? 14 : 18 }}>
-            {role === 'admin' ? '超级后台' : 'OS评审系统'}
+            {role === 'admin' ? '超级后台' : 'OS大赛数据'}
           </Typography.Text>
           {role === 'admin' && !collapsed && (
             <Tag color="gold" icon={<CrownOutlined />} style={{ marginTop: 2, fontSize: 11 }}>

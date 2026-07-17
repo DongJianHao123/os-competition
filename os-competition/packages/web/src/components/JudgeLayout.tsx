@@ -8,7 +8,7 @@ import {
 const { Header, Content, Footer } = Layout;
 
 const navItems = [
-  { key: '/judge/groups', icon: <ApartmentOutlined />, label: '评审分组' },
+  { key: '/judge/groups', icon: <ApartmentOutlined />, label: '分组' },
 ];
 
 export default function JudgeLayout() {
@@ -58,7 +58,7 @@ export default function JudgeLayout() {
               strong
               style={{ color: '#fff', fontSize: 20, letterSpacing: 1, lineHeight: '64px' }}
             >
-              OS 竞赛评审
+              OS大赛数据
             </Typography.Text>
           </div>
 
@@ -137,7 +137,7 @@ export default function JudgeLayout() {
         fontSize: 13,
         padding: '16px 48px',
       }}>
-        OS 竞赛评审系统 &copy; {new Date().getFullYear()}
+        OS大赛数据 &copy; {new Date().getFullYear()}
       </Footer>
     </Layout>
   );
